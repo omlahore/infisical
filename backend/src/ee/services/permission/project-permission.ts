@@ -109,14 +109,6 @@ export enum ProjectPermissionGroupActions {
   AssignRole = "assign-role"
 }
 
-export enum ProjectPermissionSshHostActions {
-  Read = "read",
-  Create = "create",
-  Edit = "edit",
-  Delete = "delete",
-  IssueHostCert = "issue-host-cert"
-}
-
 export enum ProjectPermissionPkiTemplateActions {
   Read = "read",
   Create = "create",
@@ -274,14 +266,6 @@ export enum ProjectPermissionInsightsActions {
   DeleteReport = "delete-report"
 }
 
-export enum ProjectPermissionMcpEndpointActions {
-  Read = "read",
-  Create = "create",
-  Edit = "edit",
-  Delete = "delete",
-  Connect = "connect"
-}
-
 export enum ProjectPermissionHoneyTokenActions {
   Read = "read",
   ReadCredentials = "read-credentials",
@@ -349,11 +333,6 @@ export enum ProjectPermissionSub {
   CertificateAuthorities = "certificate-authorities",
   Certificates = "certificates",
   CertificateTemplates = "certificate-templates",
-  SshCertificateAuthorities = "ssh-certificate-authorities",
-  SshCertificates = "ssh-certificates",
-  SshCertificateTemplates = "ssh-certificate-templates",
-  SshHosts = "ssh-hosts",
-  SshHostGroups = "ssh-host-groups",
   PkiSubscribers = "pki-subscribers",
   PkiAlerts = "pki-alerts",
   PkiCollections = "pki-collections",
@@ -378,9 +357,6 @@ export enum ProjectPermissionSub {
   ApprovalRequests = "approval-requests",
   ApprovalRequestGrants = "approval-request-grants",
   ProjectFolderGrant = "project-folder-grant",
-  McpEndpoints = "mcp-endpoints",
-  McpServers = "mcp-servers",
-  McpActivityLogs = "mcp-activity-logs",
   HoneyTokens = "honey-tokens",
   ProxiedServices = "proxied-services",
   Insights = "insights"
@@ -504,10 +480,6 @@ export type GroupSubjectFields = {
   assignableRole?: string;
 };
 
-export type SshHostSubjectFields = {
-  hostname: string;
-};
-
 export type PkiTemplateSubjectFields = {
   name: string;
   // (dangtony98): consider adding [commonName] as a subject field in the future
@@ -545,10 +517,6 @@ export type CertificatePolicySubjectFields = {
 
 export type AppConnectionSubjectFields = {
   connectionId: string;
-};
-
-export type McpEndpointSubjectFields = {
-  name: string;
 };
 
 export type HoneyTokenSubjectFields = {
@@ -650,13 +618,6 @@ export type ProjectPermissionSet =
         | (ForcedSubject<ProjectPermissionSub.CertificateTemplates> & PkiTemplateSubjectFields)
       )
     ]
-  | [ProjectPermissionActions, ProjectPermissionSub.SshCertificateAuthorities]
-  | [ProjectPermissionActions, ProjectPermissionSub.SshCertificates]
-  | [ProjectPermissionActions, ProjectPermissionSub.SshCertificateTemplates]
-  | [
-      ProjectPermissionSshHostActions,
-      ProjectPermissionSub.SshHosts | (ForcedSubject<ProjectPermissionSub.SshHosts> & SshHostSubjectFields)
-    ]
   | [
       ProjectPermissionPkiSubscriberActions,
       (
@@ -664,7 +625,6 @@ export type ProjectPermissionSet =
         | (ForcedSubject<ProjectPermissionSub.PkiSubscribers> & PkiSubscriberSubjectFields)
       )
     ]
-  | [ProjectPermissionActions, ProjectPermissionSub.SshHostGroups]
   | [ProjectPermissionActions, ProjectPermissionSub.PkiAlerts]
   | [ProjectPermissionActions, ProjectPermissionSub.PkiCollections]
   | [ProjectPermissionActions, ProjectPermissionSub.CertificateInventoryViews]
@@ -698,10 +658,6 @@ export type ProjectPermissionSet =
     ]
   | [ProjectPermissionHsmConnectorActions, ProjectPermissionSub.HsmConnectors]
   | [
-      ProjectPermissionMcpEndpointActions,
-      ProjectPermissionSub.McpEndpoints | (ForcedSubject<ProjectPermissionSub.McpEndpoints> & McpEndpointSubjectFields)
-    ]
-  | [
       ProjectPermissionHoneyTokenActions,
       ProjectPermissionSub.HoneyTokens | (ForcedSubject<ProjectPermissionSub.HoneyTokens> & HoneyTokenSubjectFields)
     ]
@@ -712,8 +668,6 @@ export type ProjectPermissionSet =
         | (ForcedSubject<ProjectPermissionSub.ProxiedServices> & ProxiedServiceSubjectFields)
       )
     ]
-  | [ProjectPermissionActions, ProjectPermissionSub.McpServers]
-  | [ProjectPermissionActions, ProjectPermissionSub.McpActivityLogs]
   | [
       ProjectPermissionCertificateProfileActions,
       (
@@ -1244,37 +1198,6 @@ const GroupConditionSchema = z
   })
   .partial();
 
-const SshHostConditionSchema = z
-  .object({
-    hostname: z.union([
-      z.string(),
-      z
-        .object({
-          [PermissionConditionOperators.$EQ]: PermissionConditionSchema[PermissionConditionOperators.$EQ],
-          [PermissionConditionOperators.$GLOB]: PermissionConditionSchema[PermissionConditionOperators.$GLOB],
-          [PermissionConditionOperators.$IN]: PermissionConditionSchema[PermissionConditionOperators.$IN]
-        })
-        .partial()
-    ])
-  })
-  .partial();
-
-const McpEndpointConditionSchema = z
-  .object({
-    name: z.union([
-      z.string(),
-      z
-        .object({
-          [PermissionConditionOperators.$EQ]: PermissionConditionSchema[PermissionConditionOperators.$EQ],
-          [PermissionConditionOperators.$NEQ]: PermissionConditionSchema[PermissionConditionOperators.$NEQ],
-          [PermissionConditionOperators.$GLOB]: PermissionConditionSchema[PermissionConditionOperators.$GLOB],
-          [PermissionConditionOperators.$IN]: PermissionConditionSchema[PermissionConditionOperators.$IN]
-        })
-        .partial()
-    ])
-  })
-  .partial();
-
 const PkiSubscriberConditionSchema = z
   .object({
     name: z.union([
@@ -1541,34 +1464,6 @@ const GeneralPermissionSchema = [
     )
   }),
   z.object({
-    subject: z
-      .literal(ProjectPermissionSub.SshCertificateAuthorities)
-      .describe("The entity this permission pertains to."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionActions).describe(
-      "Describe what action an entity can take."
-    )
-  }),
-  z.object({
-    subject: z.literal(ProjectPermissionSub.SshCertificates).describe("The entity this permission pertains to."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionActions).describe(
-      "Describe what action an entity can take."
-    )
-  }),
-  z.object({
-    subject: z
-      .literal(ProjectPermissionSub.SshCertificateTemplates)
-      .describe("The entity this permission pertains to."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionActions).describe(
-      "Describe what action an entity can take."
-    )
-  }),
-  z.object({
-    subject: z.literal(ProjectPermissionSub.SshHostGroups).describe("The entity this permission pertains to."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionActions).describe(
-      "Describe what action an entity can take."
-    )
-  }),
-  z.object({
     subject: z.literal(ProjectPermissionSub.PkiAlerts).describe("The entity this permission pertains to."),
     action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionActions).describe(
       "Describe what action an entity can take."
@@ -1675,28 +1570,6 @@ const GeneralPermissionSchema = [
   z.object({
     subject: z.literal(ProjectPermissionSub.HsmConnectors).describe("The entity this permission pertains to."),
     action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionHsmConnectorActions).describe(
-      "Describe what action an entity can take."
-    )
-  }),
-  z.object({
-    subject: z.literal(ProjectPermissionSub.McpEndpoints).describe("The entity this permission pertains to."),
-    inverted: z.boolean().optional().describe("Whether rule allows or forbids."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionMcpEndpointActions).describe(
-      "Describe what action an entity can take."
-    ),
-    conditions: McpEndpointConditionSchema.describe(
-      "When specified, only matching conditions will be allowed to access given resource."
-    ).optional()
-  }),
-  z.object({
-    subject: z.literal(ProjectPermissionSub.McpServers).describe("The entity this permission pertains to."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionActions).describe(
-      "Describe what action an entity can take."
-    )
-  }),
-  z.object({
-    subject: z.literal(ProjectPermissionSub.McpActivityLogs).describe("The entity this permission pertains to."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionActions).describe(
       "Describe what action an entity can take."
     )
   }),
@@ -1832,16 +1705,6 @@ export const ProjectPermissionV2Schema = z.discriminatedUnion("subject", [
       "Describe what action an entity can take."
     ),
     conditions: IdentityManagementConditionSchema.describe(
-      "When specified, only matching conditions will be allowed to access given resource."
-    ).optional()
-  }),
-  z.object({
-    subject: z.literal(ProjectPermissionSub.SshHosts).describe("The entity this permission pertains to."),
-    action: CASL_ACTION_SCHEMA_NATIVE_ENUM(ProjectPermissionSshHostActions).describe(
-      "Describe what action an entity can take."
-    ),
-    inverted: z.boolean().optional().describe("Whether rule allows or forbids."),
-    conditions: SshHostConditionSchema.describe(
       "When specified, only matching conditions will be allowed to access given resource."
     ).optional()
   }),

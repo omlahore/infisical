@@ -5,9 +5,6 @@ import { injectCertManagerProjectId } from "@app/server/plugins/inject-cert-mana
 import { registerAccessApprovalPolicyRouter } from "./access-approval-policy-router";
 import { registerAccessApprovalRequestRouter } from "./access-approval-request-router";
 import { registerAgentProxyCaRouter } from "./agent-proxy-ca-router";
-import { registerAiMcpActivityLogRouter } from "./ai-mcp-activity-log-router";
-import { registerAiMcpEndpointRouter } from "./ai-mcp-endpoint-router";
-import { registerAiMcpServerRouter } from "./ai-mcp-server-router";
 import { registerAssumePrivilegeRouter } from "./assume-privilege-router";
 import { AUDIT_LOG_STREAM_REGISTER_ROUTER_MAP, registerAuditLogStreamRouter } from "./audit-log-stream-routers";
 import { registerCaCrlRouter } from "./certificate-authority-crl-router";
@@ -52,11 +49,6 @@ import { registerSecretApprovalRequestRouter } from "./secret-approval-request-r
 import { registerSecretRouter } from "./secret-router";
 import { registerSecretScanningRouter } from "./secret-scanning-router";
 import { registerSecretVersionRouter } from "./secret-version-router";
-import { registerSshCaRouter } from "./ssh-certificate-authority-router";
-import { registerSshCertRouter } from "./ssh-certificate-router";
-import { registerSshCertificateTemplateRouter } from "./ssh-certificate-template-router";
-import { registerSshHostGroupRouter } from "./ssh-host-group-router";
-import { registerSshHostRouter } from "./ssh-host-router";
 import { registerSubOrgRouter } from "./sub-org-router";
 import { registerTrustedIpRouter } from "./trusted-ip-router";
 import { registerUserAdditionalPrivilegeRouter } from "./user-additional-privilege-router";
@@ -131,17 +123,6 @@ export const registerV1EERoutes = async (server: FastifyZodProvider) => {
   );
 
   await server.register(
-    async (sshRouter) => {
-      await sshRouter.register(registerSshCaRouter, { prefix: "/ca" });
-      await sshRouter.register(registerSshCertRouter, { prefix: "/certificates" });
-      await sshRouter.register(registerSshCertificateTemplateRouter, { prefix: "/certificate-templates" });
-      await sshRouter.register(registerSshHostRouter, { prefix: "/hosts" });
-      await sshRouter.register(registerSshHostGroupRouter, { prefix: "/host-groups" });
-    },
-    { prefix: "/ssh" }
-  );
-
-  await server.register(
     async (ssoRouter) => {
       await ssoRouter.register(registerSamlRouter);
       await ssoRouter.register(registerOidcRouter, { prefix: "/oidc" });
@@ -202,15 +183,6 @@ export const registerV1EERoutes = async (server: FastifyZodProvider) => {
       await kmipRouter.register(registerKmipServerRouter, { prefix: "/servers" });
     },
     { prefix: "/kmip" }
-  );
-
-  await server.register(
-    async (aiRouter) => {
-      await aiRouter.register(registerAiMcpServerRouter, { prefix: "/mcp/servers" });
-      await aiRouter.register(registerAiMcpEndpointRouter, { prefix: "/mcp/endpoints" });
-      await aiRouter.register(registerAiMcpActivityLogRouter, { prefix: "/mcp/activity-logs" });
-    },
-    { prefix: "/ai" }
   );
 
   await server.register(registerPamRouters, { prefix: "/pam" });

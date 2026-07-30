@@ -31,8 +31,7 @@ import {
   projectViewerPermission,
   signerAdminPermissions,
   signerAuditorPermissions,
-  signerOperatorPermissions,
-  sshHostBootstrapPermissions
+  signerOperatorPermissions
 } from "@app/ee/services/permission/default-roles";
 import { ResourcePermissionSet } from "@app/ee/services/permission/resource-permission";
 import { KeyStorePrefixes, KeyStoreTtls, TKeyStoreFactory } from "@app/keystore/keystore";
@@ -133,8 +132,6 @@ const buildProjectPermissionRules = (projectUserRoles: TBuildProjectPermissionDT
             return projectViewerPermission;
           case ProjectMembershipRole.NoAccess:
             return projectNoAccessPermissions;
-          case ProjectMembershipRole.SshHostBootstrapper:
-            return sshHostBootstrapPermissions;
           case ProjectMembershipRole.KmsCryptographicOperator:
             return cryptographicOperatorPermissions;
           case ProjectMembershipRole.Custom: {
