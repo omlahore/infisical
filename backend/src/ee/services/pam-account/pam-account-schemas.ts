@@ -336,7 +336,7 @@ export const ACCOUNT_TYPE_CONFIGS = {
         defaultValue: "default",
         tooltip: "The Redis ACL username. Use 'default' for the default user."
       },
-      password: { widget: PamFieldWidget.Password, secret: true },
+      password: { widget: PamFieldWidget.Password, secret: true, optional: true },
       sslEnabled: { label: "SSL Enabled" },
       sslRejectUnauthorized: {
         label: "Reject Unauthorized",
@@ -675,6 +675,7 @@ export const ACCOUNT_TYPE_CONFIGS = {
           label?: string;
           widget?: PamFieldWidget;
           secret?: boolean;
+          optional?: boolean;
           defaultValue?: string | number | boolean;
           showWhen?: { field: string; equals: string | boolean };
           tooltip?: string;
@@ -893,6 +894,10 @@ export const accountTypeRequiresGateway = (accountType: PamAccountType): boolean
   return config?.requiresGateway !== false;
 };
 
+// redis can be reached without credentials
+export const accountTypeRequiresCredential = (accountType: PamAccountType): boolean =>
+  accountType !== PamAccountType.Redis;
+
 export const getAccountAccessibilityIssues = (account: {
   accountType: PamAccountType | string;
   gatewayId?: string | null;
@@ -931,7 +936,9 @@ export const getAccountAccessibilityIssues = (account: {
     if (!hasRecordingConfig) issues.push(PamAccountAccessibilityIssue.NoRecordingConfig);
   }
 
-  if (!account.credentialConfigured) issues.push(PamAccountAccessibilityIssue.NoCredential);
+  if (accountTypeRequiresCredential(account.accountType as PamAccountType) && !account.credentialConfigured) {
+    issues.push(PamAccountAccessibilityIssue.NoCredential);
+  }
   return issues;
 };
 
@@ -953,6 +960,7 @@ export const PamFieldDescriptorSchema = z.object({
   widget: z.nativeEnum(PamFieldWidget),
   required: z.boolean(),
   secret: z.boolean(),
+  optional: z.boolean().optional(),
   options: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
 
   // Value the form prefills the field with on create
@@ -985,6 +993,7 @@ type TFieldUiHint = {
   label?: string;
   widget?: PamFieldWidget;
   secret?: boolean;
+  optional?: boolean;
   defaultValue?: string | number | boolean;
   showWhen?: PamFieldDescriptor["showWhen"];
   tooltip?: string;
@@ -1047,6 +1056,7 @@ const describeField = (
     widget,
     required,
     secret: hint.secret ?? widget === PamFieldWidget.Password,
+    ...(hint.optional ? { optional: true } : {}),
     ...(widget === PamFieldWidget.Select
       ? { options: hint.options ?? (enumValues ? enumValues.map((v) => ({ label: humanizeKey(v), value: v })) : []) }
       : {}),

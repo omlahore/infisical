@@ -137,6 +137,7 @@ export type TPamFieldDescriptor = {
   widget: PamFieldWidget;
   required: boolean;
   secret: boolean;
+  optional?: boolean;
   options?: { label: string; value: string }[];
   defaultValue?: string | number | boolean;
   showWhen?: { field: string; equals: string | boolean };
